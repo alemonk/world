@@ -1,7 +1,12 @@
 #include "helper_functions.h"
 #include <iostream>
 #include <fstream>
+#include <unordered_map>
+#include <iomanip>
 #include <vector>
+#include <cmath>
+#include <algorithm>
+
 using namespace std;
 
 bool word_in_solutions(const std::string& guess, std::ifstream& file) {
@@ -16,6 +21,54 @@ bool word_in_solutions(const std::string& guess, std::ifstream& file) {
         }
     }
     return 0;
+}
+
+unordered_map<char, double> load_letter_probabilities(const string& filename) {
+    unordered_map<char, double> probabilities;
+    ifstream file(filename);
+    if (!file) {
+        cerr << "Error: Could not open " << filename << "\n";
+        return probabilities;
+    }
+    char letter;
+    double probability;
+    while (file >> letter >> probability) {
+        probabilities[letter] = probability;
+    }
+    file.close();
+    return probabilities;
+}
+
+double compute_entropy(const string& word, const unordered_map<char, double>& probabilities) {
+    double entropy = 0.0;
+    for (char c : word) {
+        if (probabilities.find(c) != probabilities.end()) {
+            double p = probabilities.at(c);
+            entropy += p * log2(1.0 / p);
+        }
+    }
+    return entropy;
+}
+
+vector<string> get_informative_words(vector<string> possible_answers) {
+    vector<string> best_guesses;
+    unordered_map<char, double> letter_probabilities = load_letter_probabilities("letter_probabilities.txt");
+    
+    vector<pair<string, double> > word_entropies;
+    for (const string& word : possible_answers) {
+        double entropy = compute_entropy(word, letter_probabilities);
+        word_entropies.emplace_back(word, entropy);
+    }
+    
+    sort(word_entropies.begin(), word_entropies.end(), [](const auto& a, const auto& b) {
+        return a.second > b.second; // Sort descending by entropy
+    });
+    
+    for (const auto& pair : word_entropies) {
+        best_guesses.push_back(pair.first);
+    }
+    
+    return best_guesses;
 }
 
 vector<string> filter_by_green_hints(vector<string>& possible_answers, const string& hints, const string& guess) {
@@ -51,9 +104,15 @@ vector<string> filter_by_yellow_hints(vector<string>& possible_answers, const st
 
                 // Look for the guessed character in a different position
                 for (int j = 0; j < hints.size(); j++) {
+
+                    // // Find words that have the YELLOW character in the same position
+                    // if ((*it)[i] == guess[i]) {
+                    //     break;
+                    // }
+
                     if (i != j && !matched_indices[j] && (*it)[j] == guess[i] && hints[j] != 'G') {
                         yellow_match = true;
-                        matched_indices[j] = true; // Mark this position as matched
+                        matched_indices[j] = true;
                         break;
                     }
                 }
@@ -70,7 +129,7 @@ vector<string> filter_by_yellow_hints(vector<string>& possible_answers, const st
             // cout << "Removing: " << *it << endl;
             it = possible_answers.erase(it);
         } else {
-            cout << "Keeping: " << *it << endl;
+            // cout << "Keeping: " << *it << endl;
             ++it; // Keep the word and move to the next
         }
     }

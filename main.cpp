@@ -24,7 +24,16 @@ int main() {
         // Step 1: enter the guess
         attempt_number++;
         std::cout << std::endl << "Attempt number: " << std::to_string(attempt_number) << std::endl;
+
+        // Step 1.1: show most informative words
+        vector<string> best_guesses = get_informative_words(possible_answers);
+        std::cout << "\tMost informative words:" << std::endl;
+        for (int i = 0; i < 10; i++) {
+            std::cout << "\t" << best_guesses[i] << std::endl;
+        }
         std::cout << "Enter your guess (" << possible_answers.size() << " possible answers): ";
+
+        // Steo 1.2: check if the word is valid
         do {
             std::cin >> guess;
 
