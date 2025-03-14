@@ -67,8 +67,10 @@ vector<string> filter_by_yellow_hints(vector<string>& possible_answers, const st
 
         if (!match) {
             // Remove non-matching word
+            // cout << "Removing: " << *it << endl;
             it = possible_answers.erase(it);
         } else {
+            cout << "Keeping: " << *it << endl;
             ++it; // Keep the word and move to the next
         }
     }
@@ -78,24 +80,36 @@ vector<string> filter_by_yellow_hints(vector<string>& possible_answers, const st
 vector<string> filter_by_dash_hints(vector<string>& possible_answers, const string& hints, const string& guess) {
     for (auto it = possible_answers.begin(); it != possible_answers.end(); ) {
         bool match = true;
+        unordered_map<char, int> guess_letter_counts;
+        unordered_map<char, int> hint_counts;
 
+        // Step 1: Count occurrences of each letter in the guess and hints
         for (int i = 0; i < hints.size(); i++) {
+            guess_letter_counts[guess[i]]++;
+            if (hints[i] == 'G' || hints[i] == 'Y') {
+                hint_counts[guess[i]]++;
+            }
+        }
 
-            // analyze each character in 'hints'
+        // Step 2: Check if a word should be removed
+        for (int i = 0; i < hints.size(); i++) {
             if (hints[i] == '-') {
-                for (int j = 0; j < hints.size(); j++) {
+                char letter = guess[i];
 
-                    // compare i-th DASH character with 'guess'
-                    if (guess[i] == (*it)[j]) {
-                        match = false;
-                        break;
-                    }
+                // Check if this letter appears as a 'G' or 'Y' anywhere else
+                if (hint_counts[letter] > 0) {
+                    continue; // Skip removal, because it's valid in another spot
+                }
+
+                // Remove the word if it contains the letter that should not appear
+                if ((*it).find(letter) != string::npos) {
+                    match = false;
+                    break;
                 }
             }
         }
+
         if (!match) {
-            // Print the word that doesn't match
-            // cout << "Removing: " << *it << endl;
             it = possible_answers.erase(it); // Remove the word if it doesn't match
         } else {
             ++it; // Move to the next word if it matches
