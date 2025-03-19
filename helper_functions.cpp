@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <unordered_map>
+#include <unordered_set>
 #include <iomanip>
 #include <vector>
 #include <cmath>
@@ -39,24 +40,27 @@ unordered_map<char, double> load_letter_probabilities(const string& filename) {
     return probabilities;
 }
 
-double compute_entropy(const string& word, const unordered_map<char, double>& probabilities) {
+double compute_entropy(const string& word, vector<string> possible_answers) {
     double entropy = 0.0;
+    unordered_map<char, double> probabilities = load_letter_probabilities("letter_probabilities.txt");
+    unordered_set<char> processed_letters;
+
     for (char c : word) {
-        if (probabilities.find(c) != probabilities.end()) {
+        if (probabilities.find(c) != probabilities.end() && processed_letters.find(c) == processed_letters.end()) {
             double p = probabilities.at(c);
-            entropy += p * log2(1.0 / p);
+            entropy += p;
+            processed_letters.insert(c);
         }
     }
     return entropy;
 }
 
-vector<string> get_informative_words(vector<string> possible_answers) {
+void get_informative_words(vector<string> possible_answers) {
     vector<string> best_guesses;
-    unordered_map<char, double> letter_probabilities = load_letter_probabilities("letter_probabilities.txt");
     
     vector<pair<string, double> > word_entropies;
     for (const string& word : possible_answers) {
-        double entropy = compute_entropy(word, letter_probabilities);
+        double entropy = compute_entropy(word, possible_answers);
         word_entropies.emplace_back(word, entropy);
     }
     
@@ -64,11 +68,19 @@ vector<string> get_informative_words(vector<string> possible_answers) {
         return a.second > b.second; // Sort descending by entropy
     });
     
+    int i = 0;
+    int n_informative_words = 10;
+    std::cout << "Most informative words:" << std::endl;
     for (const auto& pair : word_entropies) {
+        i++;
+        if (best_guesses.size() < 10) {
+            n_informative_words = best_guesses.size();
+        }
+        if (i < 10) {
+            std::cout << "   " << pair.first << ": " << pair.second << std::endl; // Print word and entropy
+        }
         best_guesses.push_back(pair.first);
     }
-    
-    return best_guesses;
 }
 
 vector<string> filter_by_green_hints(vector<string>& possible_answers, const string& hints, const string& guess) {

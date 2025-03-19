@@ -26,11 +26,7 @@ int main() {
         std::cout << std::endl << "Attempt number: " << std::to_string(attempt_number) << std::endl;
 
         // Step 1.1: show most informative words
-        vector<string> best_guesses = get_informative_words(possible_answers);
-        std::cout << "\tMost informative words:" << std::endl;
-        for (int i = 0; i < 10; i++) {
-            std::cout << "\t" << best_guesses[i] << std::endl;
-        }
+        get_informative_words(possible_answers);
         std::cout << "Enter your guess (" << possible_answers.size() << " possible answers): ";
 
         // Steo 1.2: check if the word is valid
@@ -52,14 +48,9 @@ int main() {
         }
 
         // Step 3: filter out wrong answers
-        // Step 3.1: filter out words that don't have any letter in correct position (GREEN letters)
-        possible_answers = filter_by_green_hints(possible_answers, hints, guess);
-
-        // Step 3.2: filter out words that don't have any correct letters (YELLOW letters)
-        possible_answers = filter_by_yellow_hints(possible_answers, hints, guess);
-
-        // Step 3.3: filter out words that are not present at all (DASH)
-        possible_answers = filter_by_dash_hints(possible_answers, hints, guess);
+        possible_answers = filter_by_green_hints(possible_answers, hints, guess); // Step 3.1: filter out words that don't have any letter in correct position (GREEN letters)
+        possible_answers = filter_by_yellow_hints(possible_answers, hints, guess); // Step 3.2: filter out words that don't have any correct letters (YELLOW letters)
+        possible_answers = filter_by_dash_hints(possible_answers, hints, guess); // Step 3.3: filter out words that are not present at all (DASH)
 
         std::cout << possible_answers.size() << " possible answers." << std::endl;
         for (int i = 0; i < possible_answers.size(); i++) {
